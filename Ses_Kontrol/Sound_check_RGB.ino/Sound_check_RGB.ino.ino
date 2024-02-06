@@ -1,19 +1,18 @@
 // C++ code
 //
-int sensor = 2;
+int sensor = A0;
 
-bool durum;
+int durum;
 
 void setup()
 {
   Serial.begin(9600);
-  pinMode(sensor, INPUT);
 }
 
 void loop()
 {
  
-  durum = digitalRead,(sensor);
+  durum = analogRead,(sensor);
  
  
 
