@@ -1,30 +1,24 @@
 // C++ code
 //
-int sw1 = 10;
-int sw2 = 11;
+int sensor = 2;
 
-int durum1;
-int durum2;
+bool durum;
 
 void setup()
 {
   Serial.begin(9600);
-  pinMode(sw1, INPUT);
-  pinMode(sw2, INPUT);
-  
-  
-   
+  pinMode(sensor, INPUT);
 }
 
 void loop()
 {
  
-  durum1 = digitalRead(sw1);
-  durum2 = digitalRead(sw2);  
+  durum = digitalRead,(sensor);
+ 
  
 
-  Serial.print(durum1);
-  Serial.println(durum2);
+  Serial.println(durum);
+  
   delay(100);
   
   
