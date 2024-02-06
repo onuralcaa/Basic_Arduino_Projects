@@ -2,13 +2,14 @@
 int led=12; 
 
 int sensorpin = 7;
-bool durum; 
+int durum; 
 
 void setup() 
 {
   
 pinMode(led,OUTPUT); 
 pinMode(sensorpin,INPUT); 
+
 Serial.begin(9600); 
 
 }
@@ -16,17 +17,20 @@ Serial.begin(9600);
 void loop() 
 {
   
-
-if (digitalRead(sensorpin) == HIGH) { 
   
-  durum = 0; 
+if (digitalRead(sensorpin) == HIGH) { 
+
+  
+  digitalWrite(led, LOW);
+ 
   }
   
   else{
-    durum = 1;
+    digitalWrite(led, HIGH);
+    durum++;
     }
 
-delay(200);
+
     
 Serial.println(durum); 
 }
