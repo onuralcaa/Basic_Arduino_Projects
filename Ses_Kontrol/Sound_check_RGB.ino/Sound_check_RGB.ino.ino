@@ -1,28 +1,32 @@
-// C++ code
-//
-int sensor = A0;
-int led = 13;
-int durum;
 
-void setup()
+int led=12; 
+
+int sensorpin = 7;
+bool durum; 
+
+void setup() 
 {
-  Serial.begin(9600);
-  pinMode(sensor, INPUT);
-  pinMode(led, OUTPUT);
+  
+pinMode(led,OUTPUT); 
+pinMode(sensorpin,INPUT); 
+Serial.begin(9600); 
+
 }
 
-void loop()
+void loop() 
 {
- 
-  durum = analogRead(sensor);
+  
 
+if (digitalRead(sensorpin) == HIGH) { 
   
- 
- 
+  durum = 0; 
+  }
+  
+  else{
+    durum = 1;
+    }
 
-  Serial.println(durum);
-  
-  delay(100);
-  
-  
+delay(200);
+    
+Serial.println(durum); 
 }
