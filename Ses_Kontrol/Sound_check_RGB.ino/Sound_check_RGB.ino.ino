@@ -8,7 +8,7 @@ int Sensor = A0;
 int clap = 0;
 long detection_range_start = 0;
 long detection_range = 0;
-boolean status_lights = false;
+int color = 1;
 
 void setup() 
 {
@@ -20,11 +20,13 @@ void setup()
   pinMode(12, OUTPUT);
 }
 void loop()
-{
-  digitalWrite(b_led, HIGH);
+{ 
+  /*
+  //renk kontrol
   digitalWrite(r_led, HIGH);
-  digitalWrite(g_led, HIGH);
-
+  digitalWrite(b_led, LOW);
+  digitalWrite(g_led, LOW);
+  */
   
   int status_sensor = digitalRead(Sensor);
   if (status_sensor == 0)
@@ -44,16 +46,9 @@ void loop()
   {
     if (clap == 2)
     {
-      if (!status_lights)
-      {
-        status_lights = true;
-        digitalWrite(12, HIGH);
-      }
-      else if (status_lights)
-      {
-        status_lights = false;
-        digitalWrite(12, LOW);
-      }
+      color++;
+    }
+    
     }
     clap = 0;
   }
@@ -62,4 +57,3 @@ void loop()
 
 
   
-}
