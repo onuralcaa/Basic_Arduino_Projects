@@ -25,10 +25,12 @@ int color = 1;
 
 int status1, status2; //switch durum değişkenleri
 
+byte mode;
+
 void setup() 
 {
   Serial.begin(9600);
-}
+
   pinMode(r_led, OUTPUT);
   pinMode(b_led, OUTPUT);
   pinMode(g_led, OUTPUT);
@@ -43,9 +45,12 @@ void loop()
   status1 = digitalRead(sw1);
   status2 = digitalRead(sw2);
 
-  Serial.print(status1);
-  Serial.println(status2);
-  
+ if(status1 == 1 && status2 == 0) mode = 0;
+ else if(status1 == 0 && status2 == 0) mode = 1;
+ else if(status1 == 0 && status2 == 1) mode = 2;
+
+
+   Serial.println(mode);
   
   /*
   int status_sensor = digitalRead(Sensor);
@@ -75,5 +80,5 @@ void loop()
 
   */
 
-
+}
   
