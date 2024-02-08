@@ -12,7 +12,7 @@ int b_led = 9;
 int g_led = 11;
 
 int Sensor = A0;
-
+ 
 int clap = 0;
 long detection_range_start = 0;
 long detection_range = 0;
