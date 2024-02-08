@@ -1,20 +1,3 @@
-/**********************************************************************
- Arduino Kitabı - Coşkun Taşdemir
- Dikeyeksen Yayınları 
- http://www.dikeyeksen.com/muhendislik/arduino.html
-   
-  Analog Giriş - Çıkış İşlemleri - 4
-  RGB (red-green-blue) LED kontrolü
-
-   3 renkli LED ile çeşitli renk örnekleri oluşturuluyor.
-   hue2rgb fonksiyonu kendisine verilen 0-1 aralığındaki 
-   değere göre renk skalasındaki karşılığının kırmızı, yeşil
-   ve mavi tonlarına ait değerleri veriyor (0-255 arasında).
-   Bu değerler analogWrite fonksiyonu ile LED'e uygulanarak
-   bütün renk skalası geziliyor.   
-   Kullanılan LED tipine göre ilgili bölümü kullanabilirsiniz
-   (ortak anot veya ortak katot)  
-***********************************************************************/
 
 // LED bağlatı pinleri
 int rpin = 11;  // kırmızı
@@ -22,6 +5,22 @@ int gpin = 10; // yeşil
 int bpin = 9; // mavi
 float h = 0; //hue (ton) değeri
 int r=0, g=0, b=0; // renk değerleri
+
+//ses sensor pinleri
+int r_led = 10;
+int b_led = 9;
+int g_led = 11;
+
+int Sensor = A0;
+
+int clap = 0;
+long detection_range_start = 0;
+long detection_range = 0;
+
+int color = 1;
+
+//Mode pinleri
+
 void setup()
 {
 }
@@ -45,7 +44,7 @@ void loop()
   analogWrite(gpin, g);
   analogWrite(bpin, b);
 */
-
+ 
   delay(50);
 }
 
