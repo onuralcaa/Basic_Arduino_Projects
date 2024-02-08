@@ -1,19 +1,18 @@
 
 // LED bağlatı pinleri
-int rpin = 11;  // kırmızı
-int gpin = 10; // yeşil
-int bpin = 9; // mavi
+int r_led = 9;  // kırmızı
+int g_led = 10; // yeşil
+int b_led = 11; // mavi
 float h = 0; //hue (ton) değeri
 int r = 0, g = 0, b = 0; // renk değerleri
 
 
-int Sensor = 6;
+int Sensor = A0;
 
 int clap = 0;
 long detection_range_start = 0;
 long detection_range = 0;
-
-int color = 1;
+int color = 0;
 
 //Mode pinleri
 #define sw1 2
@@ -47,7 +46,7 @@ void loop()
 
 
 
-  switch(mode)
+  switch (mode)
   {
     case 2:
       Mode2();
@@ -76,7 +75,7 @@ void Mode2()
       detection_range_start = detection_range = millis();
       clap++;
     }
-    else if (clap > 0 && millis() - detection_range >= 50)
+    else if (clap > 0 && millis() - detection_range >= 60)
     {
       detection_range = millis();
       clap++;
@@ -87,10 +86,56 @@ void Mode2()
     if (clap == 2)
     {
       color++;
+
     }
-
+    if (color >= 7) color = 0;
+    clap = 0;
   }
-  clap = 0;
 
-  Serial.println(clap);
+  //Serial.println(color);
+
+  switch(color)
+  {
+    case 0://BEYAZ
+      digitalWrite(r_led, HIGH);
+      digitalWrite(g_led, HIGH);
+      digitalWrite(b_led, HIGH);
+      break;
+
+    case 1://KIRMIZI
+      digitalWrite(r_led, HIGH);
+      digitalWrite(g_led, LOW);
+      digitalWrite(b_led, LOW);
+      break;
+
+    case 2://YESİL
+      digitalWrite(r_led, LOW);
+      digitalWrite(g_led, HIGH);
+      digitalWrite(b_led, LOW);
+      break;
+
+    case 3://MAVI
+      digitalWrite(r_led, LOW);
+      digitalWrite(g_led, LOW);
+      digitalWrite(b_led, HIGH);
+      break;
+
+    case 4://SARI
+      digitalWrite(r_led, HIGH);
+      digitalWrite(g_led, HIGH);
+      digitalWrite(b_led, LOW);
+      break;
+
+    case 5://TURKUAZ
+      digitalWrite(r_led, LOW);
+      digitalWrite(g_led, HIGH);
+      digitalWrite(b_led, HIGH);
+      break;
+
+    case 6://MOR
+      digitalWrite(r_led, HIGH);
+      digitalWrite(g_led, LOW);
+      digitalWrite(b_led, HIGH);
+      break;
+  }
 }
