@@ -1,33 +1,53 @@
+
+// LED bağlatı pinleri
+int rpin = 11;  // kırmızı
+int gpin = 10; // yeşil
+int bpin = 9; // mavi
+float h = 0; //hue (ton) değeri
+int r=0, g=0, b=0; // renk değerleri
+
+//ses sensor pinleri
 int r_led = 10;
 int b_led = 9;
 int g_led = 11;
-
 
 int Sensor = A0;
 
 int clap = 0;
 long detection_range_start = 0;
 long detection_range = 0;
+
 int color = 1;
+
+//Mode pinleri
+#define sw1 2
+#define sw2 3
+
+int status1, status2; //switch durum değişkenleri
 
 void setup() 
 {
+  Serial.begin(9600);
+}
   pinMode(r_led, OUTPUT);
   pinMode(b_led, OUTPUT);
   pinMode(g_led, OUTPUT);
+
+  pinMode(sw1, INPUT);
+  pinMode(sw2, INPUT);
   
   pinMode(Sensor, INPUT);
-  pinMode(12, OUTPUT);
 }
 void loop()
 { 
-  /*
-  //renk kontrol
-  digitalWrite(r_led, HIGH);
-  digitalWrite(b_led, LOW);
-  digitalWrite(g_led, LOW);
-  */
+  status1 = digitalRead(sw1);
+  status2 = digitalRead(sw2);
+
+  Serial.print(status1);
+  Serial.println(status2);
   
+  
+  /*
   int status_sensor = digitalRead(Sensor);
   if (status_sensor == 0)
   {
@@ -53,7 +73,7 @@ void loop()
     clap = 0;
   }
 
-  
+  */
 
 
   
