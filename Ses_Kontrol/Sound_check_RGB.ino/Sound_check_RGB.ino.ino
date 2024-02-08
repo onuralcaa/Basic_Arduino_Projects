@@ -51,6 +51,14 @@ void loop()
     case 2:
       Mode2();
       break;
+
+    case 1:
+      Mode1();
+      break;
+
+    case 0:
+      Mode0();
+      break;
   }
 
 }
@@ -75,7 +83,7 @@ void Mode1()
   analogWrite(g_led, 255 - g);
   analogWrite(b_led, 255 - b);
 
-  delay(50);
+  delay(25);
 }
 
 void Mode2()
