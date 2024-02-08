@@ -12,7 +12,7 @@ int Sensor = A0;
 int clap = 0;
 long detection_range_start = 0;
 long detection_range = 0;
-int color = 0;
+int color = 1;
 
 //Mode pinleri
 #define sw1 2
@@ -21,6 +21,36 @@ int color = 0;
 int status1, status2; //switch durum değişkenleri
 
 byte mode;
+
+
+***KODLARIN KALBİ*********
+
+   ******     ******
+  ********   ********                           
+********** ***********
+**********************
+*********************
+ *******************
+   ****************
+     *************
+       **********
+        ********
+         ******
+          ****
+          ***
+          **
+          *
+
+      ****           ****
+   **     **      **     **
+ **         **  **         **
+**            ****            **
+**             **             **
+ **           ****           **
+   **        **    **        **
+     **    **        **    **
+       ****            ****
+                                                                      
 
 void setup()
 {
@@ -65,7 +95,9 @@ void loop()
 
 void Mode0()
 {
-
+  digitalWrite(r_led, HIGH);
+  digitalWrite(g_led, HIGH);
+  digitalWrite(b_led, HIGH);
 }
 
 void Mode1()
@@ -83,7 +115,7 @@ void Mode1()
   analogWrite(g_led, 255 - g);
   analogWrite(b_led, 255 - b);
 
-  delay(25);
+  delay(50);
 }
 
 void Mode2()
@@ -117,12 +149,6 @@ void Mode2()
 
   switch (color)
   {
-    case 0://BEYAZ
-      digitalWrite(r_led, HIGH);
-      digitalWrite(g_led, HIGH);
-      digitalWrite(b_led, HIGH);
-      break;
-
     case 1://KIRMIZI
       digitalWrite(r_led, HIGH);
       digitalWrite(g_led, LOW);
@@ -163,9 +189,9 @@ void Mode2()
 
 void h2rgb(float H, int& R, int& G, int& B) {
   int var_i;
-  float S=1, V=1, var_1, var_2, var_3, var_h, var_r, var_g, var_b;
+  float S = 1, V = 1, var_1, var_2, var_3, var_h, var_r, var_g, var_b;
 
-  if ( S == 0 )              
+  if ( S == 0 )
   {
     R = V * 255;
     G = V * 255;
@@ -174,8 +200,8 @@ void h2rgb(float H, int& R, int& G, int& B) {
   else
   {
     var_h = H * 6;
-    if ( var_h == 6 ) var_h = 0;      
-    var_i = int( var_h ) ;            
+    if ( var_h == 6 ) var_h = 0;
+    var_i = int( var_h ) ;
     var_1 = V * ( 1 - S );
     var_2 = V * ( 1 - S * ( var_h - var_i ) );
     var_3 = V * ( 1 - S * ( 1 - ( var_h - var_i ) ) );
@@ -205,12 +231,12 @@ void h2rgb(float H, int& R, int& G, int& B) {
       var_b = V;
     }
     else {
-    var_r = V;
-    var_g = var_1 ;
-    var_b = var_2 ;
+      var_r = V;
+      var_g = var_1 ;
+      var_b = var_2 ;
     }
-    R = (1-var_r) * 255;        
-    G = (1-var_g) * 255;
-    B = (1-var_b) * 255;
+    R = (1 - var_r) * 255;
+    G = (1 - var_g) * 255;
+    B = (1 - var_b) * 255;
   }
 }
