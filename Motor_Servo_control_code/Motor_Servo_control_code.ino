@@ -64,12 +64,13 @@ void loop()
      MAX LEFT 145
   */
 
+/*
   for (int i = 45; i <= 145 ; i++)
   {
     Servo1.write(i);
     delay(100);
     if (i == 145) i = 0;
   }
-
+*/
 
 }
