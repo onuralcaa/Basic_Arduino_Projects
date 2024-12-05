@@ -1,4 +1,13 @@
 #include <Servo.h>
+#include "NewPing.h"
+
+//HCSR04 sensor degiskenleri
+#define ECHO_PIN 13
+#define TRIGGER_PIN 12
+#define MAX_DISTANCE 400
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+float duration, distance;
+
 
 Servo Servo1;
 
@@ -33,6 +42,9 @@ unsigned long startTime;
 void setup() {
   Serial.begin(57600); // Seri haberleşmeyi başlat
 
+  pinMode(TRIGGER_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  
   // Servo motoru pin 9'a bağla
   Servo1.attach(9);
   Servo1.write(servoCenter); // Servo başlangıçta merkez konumda başlat
@@ -79,6 +91,7 @@ void Backward()
 }
 
 void loop() {
+  /*
   // 5 saniyede bir Forward fonksiyonunu çağır
   if (millis() - startTime <= 240000) { // İlk 5 saniye ileri hareket
     Forward();
@@ -109,4 +122,13 @@ void loop() {
     Servo1.write(servoAngle); // Servo motoru belirlenen açıya ayarla
     previousError = error;    // Hatanın önceki değeri
   }
+  */
+
+  
+  distance = sonar.ping_cm();
+  Serial.print("Mesafe = ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+
 }
