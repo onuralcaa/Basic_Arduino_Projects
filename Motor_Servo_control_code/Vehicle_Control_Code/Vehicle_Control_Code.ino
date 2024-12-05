@@ -44,7 +44,7 @@ void setup() {
 
   pinMode(TRIGGER_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
-  
+
   // Servo motoru pin 9'a bağla
   Servo1.attach(9);
   Servo1.write(servoCenter); // Servo başlangıçta merkez konumda başlat
@@ -90,16 +90,24 @@ void Backward()
   analogWrite(EnL, 100);
 }
 
+void MotorStop()
+{
+  analogWrite(EnR, 0);
+  analogWrite(EnL, 0);
+}
+
 void loop() {
-  /*
-  // 5 saniyede bir Forward fonksiyonunu çağır
-  if (millis() - startTime <= 240000) { // İlk 5 saniye ileri hareket
+
+  distance = sonar.ping_cm();
+
+  if(distance > 10)
+  {
     Forward();
-  } else {
-    // 5 saniye geçtiğinde motorları durdur
-    analogWrite(EnL, 0);
-    analogWrite(EnR, 0);
   }
+  else 
+    MotorStop();
+  
+
 
   // Serial porttan veri varsa oku
   if (Serial.available() > 0) {
@@ -122,13 +130,5 @@ void loop() {
     Servo1.write(servoAngle); // Servo motoru belirlenen açıya ayarla
     previousError = error;    // Hatanın önceki değeri
   }
-  */
-
-  
-  distance = sonar.ping_cm();
-  Serial.print("Mesafe = ");
-  Serial.print(distance);
-  Serial.println(" cm");
-
 
 }
