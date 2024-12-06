@@ -8,7 +8,6 @@
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 float duration, distance;
 
-
 Servo Servo1;
 
 int resultValue = 0; // Gelen değer için değişken
@@ -107,8 +106,6 @@ void loop() {
   else 
     MotorStop();
   
-
-
   // Serial porttan veri varsa oku
   if (Serial.available() > 0) {
     String data = Serial.readStringUntil('\n'); // Satır sonuna kadar oku
@@ -130,5 +127,5 @@ void loop() {
     Servo1.write(servoAngle); // Servo motoru belirlenen açıya ayarla
     previousError = error;    // Hatanın önceki değeri
   }
-
+  
 }
