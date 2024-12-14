@@ -55,12 +55,12 @@ void Forward() {
   // Right motor ileri
   digitalWrite(HighR, HIGH);
   digitalWrite(LowR, LOW);
-  analogWrite(EnR, 125);
+  analogWrite(EnR, 95);
 
   // Left motor ileri
   digitalWrite(HighL, LOW);
   digitalWrite(LowL, HIGH);
-  analogWrite(EnL, 125);
+  analogWrite(EnL, 95);
 }
 
 // Geri hareket fonksiyonu
@@ -68,12 +68,12 @@ void Backward() {
   // Right motor geri
   digitalWrite(HighR, LOW);
   digitalWrite(LowR, HIGH);
-  analogWrite(EnR, 125);
+  analogWrite(EnR, 95);
 
   // Left motor geri
   digitalWrite(HighL, HIGH);
   digitalWrite(LowL, LOW);
-  analogWrite(EnL, 125);
+  analogWrite(EnL, 95);
 }
 
 // Araç durdurma
@@ -93,7 +93,7 @@ void TurnLeft(int durationMs) {
 }
 
 // Sağa dönme hareketi
-void TurnRight(int durationMs) {
+void TurnRightBack(int durationMs) {
   Servo1.write(servoMin); // Direksiyonu sağa çevir
   Backward();              // İleri hareket
   delay(durationMs);      // Belirtilen süre kadar devam et
@@ -103,64 +103,76 @@ void TurnRight(int durationMs) {
 
 // U dönüşü hareketi
 void PerformUTurn() {
-  // Geri git
+  // İleri git
   Forward();
-  delay(1500); // 1 saniye geri git
+  delay(750); // 1 saniye geri git
 
   // Sola dönerek U dönüşü yap
-  TurnLeft(3000); // 3 saniye boyunca sola dön
-  TurnRight(3000);
-  TurnLeft(3000); // 3 saniye boyunca sola dön
+  TurnLeft(1200); // 2 saniye boyunca sola dön
+  TurnRightBack(1200);
+  TurnLeft(1500); // 2 saniye boyunca sola dön
 
+  
   // Araç durdur
   MotorStop();
-  delay(500); // Kısa duraklama
+  delay(2000); // Kısa duraklama
 }
 /////////////////////////////////////////////////////////////////
 void loop() {
   // Mesafe sensörü verisi
-  distance = sonar.ping_cm();
+    distance = sonar.ping_cm();
 
-  // Seri porttan veri varsa oku
-  if (Serial.available() > 0) {
-    String data = Serial.readStringUntil('\n'); // Satır sonuna kadar oku
-
-    if (data == "TURN") {
-      uTurnActive = true;
-      uTurnStartTime = millis(); // U dönüşü başlangıç zamanını kaydet
-    } else {
-      resultValue = data.toInt(); // Gelen veriyi tam sayıya çevir
-    }
-  }
-
-  // Eğer U dönüşü aktifse, hareketleri yap
-  if (uTurnActive) {
-    PerformUTurn();
-
-    // U dönüşü tamamlandıktan sonra aktif durumu kapat
-    if (millis() - uTurnStartTime > 5000) { // 5 saniyelik U dönüşü süresi
-      uTurnActive = false;
-    }
-    return; // U dönüşü sırasında diğer işlemleri durdur
-  }
-
+    
   // Normal şerit takip hareketleri
-  if (distance > 10) {
+  if (distance > 1) {
+
     Forward();
-  } else {
+
+    
+  /*
+    // Seri porttan veri varsa oku
+    if (Serial.available() > 0) {
+      String data = Serial.readStringUntil('\n'); // Satır sonuna kadar oku
+
+      if (data == "TURN") {
+        uTurnActive = true;
+        uTurnStartTime = millis(); // U dönüşü başlangıç zamanını kaydet
+      } else {
+        resultValue = data.toInt(); // Gelen veriyi tam sayıya çevir
+      }
+    }
+  */
+    // Eğer U dönüşü aktifse, hareketleri yap
+    //if (uTurnActive) 
+    if(1)
+    {
+      PerformUTurn();
+
+      // U dönüşü tamamlandıktan sonra aktif durumu kapat
+      if (millis() - uTurnStartTime > 10000) { // 5 saniyelik U dönüşü süresi
+        uTurnActive = false;
+      }
+      return; // U dönüşü sırasında diğer işlemleri durdur
+    }
+
+    // Gelen PID kontrol komutlarına göre servo hareketi
+    float error = resultValue;
+    float pidOutput = error; // Direkt hata değeri servo açısı olarak alındı
+
+    // Servo açısını hesapla
+    int servoAngle = servoCenter - pidOutput;
+
+    // Servo açısını sınırlandır
+    if (servoAngle > servoMax) servoAngle = servoMax;
+    if (servoAngle < servoMin) servoAngle = servoMin;
+
+    Servo1.write(servoAngle); // Servo motoru belirlenen açıya ayarla
+  }
+
+  else
+  {
     MotorStop();
   }
 
-  // Gelen PID kontrol komutlarına göre servo hareketi
-  float error = resultValue;
-  float pidOutput = error; // Direkt hata değeri servo açısı olarak alındı
 
-  // Servo açısını hesapla
-  int servoAngle = servoCenter - pidOutput;
-
-  // Servo açısını sınırlandır
-  if (servoAngle > servoMax) servoAngle = servoMax;
-  if (servoAngle < servoMin) servoAngle = servoMin;
-
-  Servo1.write(servoAngle); // Servo motoru belirlenen açıya ayarla
 }
