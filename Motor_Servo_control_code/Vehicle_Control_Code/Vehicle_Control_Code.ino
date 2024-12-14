@@ -1,29 +1,24 @@
 #include <Servo.h>
 #include "NewPing.h"
 
-//HCSR04 sensor degiskenleri
+// HCSR04 sensor degiskenleri
 #define ECHO_PIN 13
 #define TRIGGER_PIN 12
 #define MAX_DISTANCE 400
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+
 float duration, distance;
 
 Servo Servo1;
 
 int resultValue = 0; // Gelen değer için değişken
-
-// PID parametreleri
-float Kp = 1.25;   // Proportional katsayısı
-float Ki = 0.0;    // Integral katsayısı
-float Kd = 0.75;   // Derivative katsayısı
-
-float previousError = 0;
-float integral = 0;
+bool uTurnActive = false; // U dönüşü aktif mi?
+unsigned long uTurnStartTime; // U dönüşü başlangıç zamanı
 
 // Servo sınırları
-int servoMin = 50;    // Servo minimum açısı (sağ)
-int servoMax = 130;   // Servo maksimum açısı (sol)
-int servoCenter = 90; // Servo merkezi (direksiyon sıfır konumu)
+int servoMin = 55;    // Servo minimum açısı (sağ)
+int servoMax = 135;   // Servo maksimum açısı (sol)
+int servoCenter = 95; // Servo merkezi (direksiyon sıfır konumu)
 
 // Left motor pins
 const int EnL = 5;
@@ -34,9 +29,6 @@ const int LowL = 7;
 const int EnR = 3;
 const int HighR = 2;
 const int LowR = 4;
-
-// Zaman kontrolü için değişken
-unsigned long startTime;
 
 void setup() {
   Serial.begin(57600); // Seri haberleşmeyi başlat
@@ -56,76 +48,116 @@ void setup() {
   pinMode(EnR, OUTPUT);
   pinMode(HighR, OUTPUT);
   pinMode(LowR, OUTPUT);
-
-  // Zamanlayıcıyı başlat
-  startTime = millis();
 }
 
 // İleri hareket fonksiyonu
-void Forward()
-{
+void Forward() {
   // Right motor ileri
   digitalWrite(HighR, HIGH);
   digitalWrite(LowR, LOW);
-  analogWrite(EnR, 100);
+  analogWrite(EnR, 125);
 
   // Left motor ileri
   digitalWrite(HighL, LOW);
   digitalWrite(LowL, HIGH);
-  analogWrite(EnL, 100);
+  analogWrite(EnL, 125);
 }
 
 // Geri hareket fonksiyonu
-void Backward()
-{
+void Backward() {
   // Right motor geri
   digitalWrite(HighR, LOW);
   digitalWrite(LowR, HIGH);
-  analogWrite(EnR, 100);
+  analogWrite(EnR, 125);
 
   // Left motor geri
   digitalWrite(HighL, HIGH);
   digitalWrite(LowL, LOW);
-  analogWrite(EnL, 100);
+  analogWrite(EnL, 125);
 }
 
-void MotorStop()
-{
+// Araç durdurma
+void MotorStop() {
   analogWrite(EnR, 0);
   analogWrite(EnL, 0);
 }
 
-void loop() {
+// Sola dönme hareketi
+void TurnLeft(int durationMs) {
+  Servo1.write(servoMax); // Direksiyonu sola çevir
+  Forward();              // İleri hareket
+  delay(durationMs);      // Belirtilen süre kadar devam et
+  Servo1.write(servoCenter); // Direksiyonu merkezle
+  MotorStop();            // Araç durdur
+}
 
+// Sağa dönme hareketi
+void TurnRight(int durationMs) {
+  Servo1.write(servoMin); // Direksiyonu sağa çevir
+  Forward();              // İleri hareket
+  delay(durationMs);      // Belirtilen süre kadar devam et
+  Servo1.write(servoCenter); // Direksiyonu merkezle
+  MotorStop();            // Araç durdur
+}
+
+// U dönüşü hareketi
+void PerformUTurn() {
+  // Geri git
+  Backward();
+  delay(1000); // 1 saniye geri git
+
+  // Sola dönerek U dönüşü yap
+  TurnLeft(3000); // 3 saniye boyunca sola dön
+
+  // Araç durdur
+  MotorStop();
+  delay(500); // Kısa duraklama
+}
+
+void loop() {
+  // Mesafe sensörü verisi
   distance = sonar.ping_cm();
 
-  if(distance > 10)
-  {
-    Forward();
-  }
-  else 
-    MotorStop();
-  
-  // Serial porttan veri varsa oku
+  // Seri porttan veri varsa oku
   if (Serial.available() > 0) {
     String data = Serial.readStringUntil('\n'); // Satır sonuna kadar oku
-    resultValue = data.toInt(); // Gelen veriyi tam sayıya çevir
 
-    // PID kontrol
-    float error = resultValue;
-    integral += error;
-    float derivative = error - previousError;
-    float pidOutput = (Kp * error) + (Ki * integral) + (Kd * derivative);
-
-    // Servo açısını hesapla
-    int servoAngle = servoCenter - pidOutput;
-
-    // Servo açısını sınırlandır
-    if (servoAngle > servoMax) servoAngle = servoMax;
-    if (servoAngle < servoMin) servoAngle = servoMin;
-
-    Servo1.write(servoAngle); // Servo motoru belirlenen açıya ayarla
-    previousError = error;    // Hatanın önceki değeri
+    if (data == "TURN") {
+      uTurnActive = true;
+      uTurnStartTime = millis(); // U dönüşü başlangıç zamanını kaydet
+    } else {
+      resultValue = data.toInt(); // Gelen veriyi tam sayıya çevir
+    }
   }
-  
+
+  // Eğer U dönüşü aktifse, hareketleri yap
+  if (uTurnActive) {
+    PerformUTurn();
+
+    // U dönüşü tamamlandıktan sonra aktif durumu kapat
+    if (millis() - uTurnStartTime > 5000) { // 5 saniyelik U dönüşü süresi
+      uTurnActive = false;
+    }
+    return; // U dönüşü sırasında diğer işlemleri durdur
+  }
+
+  // Normal şerit takip hareketleri
+  if (distance > 10) {
+    Forward();
+  } else {
+    MotorStop();
+  }
+
+  // Gelen PID kontrol komutlarına göre servo hareketi
+  float error = resultValue;
+  float pidOutput = error; // Direkt hata değeri servo açısı olarak alındı
+
+  // Servo açısını hesapla
+  int servoAngle = servoCenter - pidOutput;
+
+  // Servo açısını sınırlandır
+  if (servoAngle > servoMax) servoAngle = servoMax;
+  if (servoAngle < servoMin) servoAngle = servoMin;
+
+  Servo1.write(servoAngle); // Servo motoru belirlenen açıya ayarla
 }
