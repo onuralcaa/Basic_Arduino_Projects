@@ -82,6 +82,7 @@ void MotorStop() {
   analogWrite(EnL, 0);
 }
 
+////////////////U dönüşü için////////////////////////////////////
 // Sola dönme hareketi
 void TurnLeft(int durationMs) {
   Servo1.write(servoMax); // Direksiyonu sola çevir
@@ -94,7 +95,7 @@ void TurnLeft(int durationMs) {
 // Sağa dönme hareketi
 void TurnRight(int durationMs) {
   Servo1.write(servoMin); // Direksiyonu sağa çevir
-  Forward();              // İleri hareket
+  Backward();              // İleri hareket
   delay(durationMs);      // Belirtilen süre kadar devam et
   Servo1.write(servoCenter); // Direksiyonu merkezle
   MotorStop();            // Araç durdur
@@ -103,17 +104,19 @@ void TurnRight(int durationMs) {
 // U dönüşü hareketi
 void PerformUTurn() {
   // Geri git
-  Backward();
-  delay(1000); // 1 saniye geri git
+  Forward();
+  delay(1500); // 1 saniye geri git
 
   // Sola dönerek U dönüşü yap
+  TurnLeft(3000); // 3 saniye boyunca sola dön
+  TurnRight(3000);
   TurnLeft(3000); // 3 saniye boyunca sola dön
 
   // Araç durdur
   MotorStop();
   delay(500); // Kısa duraklama
 }
-
+/////////////////////////////////////////////////////////////////
 void loop() {
   // Mesafe sensörü verisi
   distance = sonar.ping_cm();
