@@ -122,14 +122,6 @@ void loop() {
   // Mesafe sensörü verisi
     distance = sonar.ping_cm();
 
-    
-  // Normal şerit takip hareketleri
-  if (distance > 1) {
-
-    Forward();
-
-    
-  /*
     // Seri porttan veri varsa oku
     if (Serial.available() > 0) {
       String data = Serial.readStringUntil('\n'); // Satır sonuna kadar oku
@@ -141,15 +133,19 @@ void loop() {
         resultValue = data.toInt(); // Gelen veriyi tam sayıya çevir
       }
     }
-  */
+    
+  // Normal şerit takip hareketleri
+  if (distance > 10) {
+
+    Forward();
+  
     // Eğer U dönüşü aktifse, hareketleri yap
-    //if (uTurnActive) 
-    if(1)
+    if (uTurnActive) 
     {
       PerformUTurn();
 
       // U dönüşü tamamlandıktan sonra aktif durumu kapat
-      if (millis() - uTurnStartTime > 10000) { // 5 saniyelik U dönüşü süresi
+      if (millis() - uTurnStartTime > 5500) { // 5.5 saniyelik U dönüşü süresi
         uTurnActive = false;
       }
       return; // U dönüşü sırasında diğer işlemleri durdur
