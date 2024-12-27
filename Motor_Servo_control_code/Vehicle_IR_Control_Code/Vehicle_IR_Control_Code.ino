@@ -3,7 +3,7 @@
 #include <IRremote.hpp>
 
 // IR Sensör Tanımlamaları
-#define IR_RECEIVE_PIN 11
+#define IR_RECEIVE_PIN 2
 
 // HCSR04 Mesafe Sensör Tanımları
 #define ECHO_PIN 13
@@ -23,12 +23,12 @@ const int servoCenter = 95;
 
 // Motor Pinleri
 const int EnL = 5;
-const int HighL = 6;
-const int LowL = 7;
+const int HighL = 3;
+const int LowL = 4;
 
-const int EnR = 3;
-const int HighR = 2;
-const int LowR = 4;
+const int EnR = 6;
+const int HighR = 8;
+const int LowR = 7;
 
 // Mod ve Kontrol Değişkenleri
 bool otonomMod = false;       // Varsayılan manuel mod
@@ -56,7 +56,7 @@ void setup() {
   pinMode(ECHO_PIN, INPUT);
 
   // Servo Motor
-  Servo1.attach(9);
+  Servo1.attach(10);
   Servo1.write(servoCenter); // Başlangıçta ortada
 
   // Motor Pinleri
@@ -69,7 +69,7 @@ void setup() {
 }
 
 // İleri Hareket
-void Forward(int speed = 150) {
+void Forward(int speed = 95) {
   digitalWrite(HighR, HIGH);
   digitalWrite(LowR, LOW);
   analogWrite(EnR, speed);
@@ -80,7 +80,7 @@ void Forward(int speed = 150) {
 }
 
 // Geri Hareket
-void Backward(int speed = 150) {
+void Backward(int speed = 95) {
   digitalWrite(HighR, LOW);
   digitalWrite(LowR, HIGH);
   analogWrite(EnR, speed);
@@ -145,6 +145,7 @@ void handleIRCommand(unsigned long command) {
 
 // Ana Döngü
 void loop() {
+  
   // IR Kodlarını Kontrol Et
   if (IrReceiver.decode()) {
     unsigned long irCode = IrReceiver.decodedIRData.decodedRawData;
@@ -182,11 +183,5 @@ void loop() {
       Servo1.write(servoAngle);
     } 
     
-  else if(distance > 5 && distance < 10)
-  {
-    Backward();
-  }
-  else 
-    MotorStop();
   }
 }

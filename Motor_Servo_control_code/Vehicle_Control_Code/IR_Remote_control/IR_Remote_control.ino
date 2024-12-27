@@ -1,6 +1,6 @@
 //Yeni versiyon
 #include <IRremote.hpp>
-#define IR_RECEIVE_PIN 11
+#define IR_RECEIVE_PIN 8
 
 void setup()
 {
