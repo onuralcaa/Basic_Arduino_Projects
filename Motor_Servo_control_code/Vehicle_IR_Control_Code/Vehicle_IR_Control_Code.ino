@@ -25,25 +25,26 @@ const int servoCenter = 95;
 const int EnL = 5;
 const int HighL = 6;
 const int LowL = 7;
+
 const int EnR = 3;
 const int HighR = 2;
 const int LowR = 4;
 
 // Mod ve Kontrol Değişkenleri
-bool otonomMod = false;       // Başlangıçta otonom mod
-unsigned long uTurnStartTime;
-bool uTurnActive = false;
-int resultValue = 0;         // Raspberry Pi'den gelen açı değeri
+bool otonomMod = false;       // Varsayılan manuel mod
+unsigned long lastCommandTime = 0;
+int resultValue = 0;          // Raspberry Pi'den gelen açı değeri
 
 // IR Tuş Kodları
-#define BUTTON_1 0xBA45FF00
-#define BUTTON_2 0xB946FF00
+#define BUTTON_1 0xBA45FF00 // Manuel Mod
+#define BUTTON_2 0xB946FF00 // Otonom Mod
 #define BUTTON_UP 0xE718FF00
 #define BUTTON_DOWN 0xAD52FF00
 #define BUTTON_RIGHT 0xA55AFF00
 #define BUTTON_LEFT 0xF708FF00
 #define BUTTON_OK 0xE31CFF00
 
+// Fonksiyon Tanımları
 void setup() {
   Serial.begin(57600); // Seri Haberleşme Hızı
 
@@ -68,7 +69,7 @@ void setup() {
 }
 
 // İleri Hareket
-void Forward(int speed = 95) {
+void Forward(int speed = 150) {
   digitalWrite(HighR, HIGH);
   digitalWrite(LowR, LOW);
   analogWrite(EnR, speed);
@@ -79,7 +80,7 @@ void Forward(int speed = 95) {
 }
 
 // Geri Hareket
-void Backward(int speed = 95) {
+void Backward(int speed = 150) {
   digitalWrite(HighR, LOW);
   digitalWrite(LowR, HIGH);
   analogWrite(EnR, speed);
@@ -110,42 +111,25 @@ void CenterServo() {
   Servo1.write(servoCenter);
 }
 
-// U Dönüşü
-void PerformUTurn() {
-  Forward(95);
-  delay(750);
-
-  Servo1.write(servoMax);
-  delay(1200);
-  Servo1.write(servoMin);
-  delay(1200);
-  Servo1.write(servoMax);
-  delay(1500);
-
-  MotorStop();
-  delay(2000);
-}
-
 // IR Komutlarını İşle
 void handleIRCommand(unsigned long command) {
-  if (command == BUTTON_1) { // Kumanda Modu
+  if (command == BUTTON_1) { // Manuel Mod
     otonomMod = false;
-    //Serial.println("Kumanda Modu Aktif!");
+    MotorStop(); // Manuel moda geçerken motorları durdur
   }
   else if (command == BUTTON_2) { // Otonom Mod
-    otonomMod = true;
-    //Serial.println("Otonom Mod Aktif!");
+    otonomMod = true; // Otonom moda geç
+    Servo1.write(servoCenter); // Servo ortada başlasın
+    MotorStop(); // Otonom mod başlangıcında dur
   }
-  else if (!otonomMod) { // Kumanda Modunda Kontroller
+  else if (!otonomMod) { // Manuel Mod Kontrolleri
     if (command == BUTTON_UP) { // İleri Git
       Forward();
-      delay(500);
-      MotorStop();
+      lastCommandTime = millis(); // Zamanlayıcı güncelle
     }
     else if (command == BUTTON_DOWN) { // Geri Git
       Backward();
-      delay(500);
-      MotorStop();
+      lastCommandTime = millis(); // Zamanlayıcı güncelle
     }
     else if (command == BUTTON_RIGHT) { // Sağa Dön
       TurnRight();
@@ -165,14 +149,17 @@ void loop() {
   if (IrReceiver.decode()) {
     unsigned long irCode = IrReceiver.decodedIRData.decodedRawData;
     if (irCode > 1) { // Geçerli bir IR kodu
-      Serial.print("IR Kodu: ");
-      Serial.println(irCode, HEX);
       handleIRCommand(irCode); // Komutu işle
     }
     IrReceiver.resume(); // Yeni veri almak için hazırla
   }
 
-  // Otonom Modda Çalıştır
+  // Manuel Mod: Süreyi Kontrol Et ve Motorları Durdur
+  if (!otonomMod && millis() - lastCommandTime > 500) {
+    MotorStop(); // 500 ms sonra dur
+  }
+
+  // Otonom Mod: Seri Porttan Gelen Veriyi Sürekli Kontrol Et
   if (otonomMod) {
     distance = sonar.ping_cm(); // Mesafe Sensörü Kontrolü
     if (distance > 10) {
@@ -181,12 +168,7 @@ void loop() {
       // Seri Porttan Veri Al
       if (Serial.available() > 0) {
         String data = Serial.readStringUntil('\n');
-        if (data == "TURN") {
-          uTurnActive = true;
-          uTurnStartTime = millis();
-        } else {
-          resultValue = data.toInt();
-        }
+        resultValue = data.toInt();
       }
 
       // Gelen açı değeri ile servo ayarla
@@ -198,16 +180,13 @@ void loop() {
       if (servoAngle < servoMin) servoAngle = servoMin;
 
       Servo1.write(servoAngle);
-    } else {
-      MotorStop(); // Engel varsa dur
-    }
-
-    // U Dönüşü Kontrolü
-    if (uTurnActive) {
-      PerformUTurn();
-      if (millis() - uTurnStartTime > 5500) {
-        uTurnActive = false;
-      }
-    }
+    } 
+    
+  else if(distance > 5 && distance < 10)
+  {
+    Backward();
+  }
+  else 
+    MotorStop();
   }
 }

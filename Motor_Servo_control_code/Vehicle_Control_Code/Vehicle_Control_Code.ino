@@ -165,10 +165,12 @@ void loop() {
     Servo1.write(servoAngle); // Servo motoru belirlenen açıya ayarla
   }
 
-  else
+  else if(distance > 5 && distance < 10)
   {
-    MotorStop();
+    Backward();
   }
+  else 
+    MotorStop();
 
 
 }
