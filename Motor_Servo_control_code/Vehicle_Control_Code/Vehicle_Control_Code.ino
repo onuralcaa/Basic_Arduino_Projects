@@ -22,13 +22,13 @@ int servoCenter = 95; // Servo merkezi (direksiyon sıfır konumu)
 
 // Left motor pins
 const int EnL = 5;
-const int HighL = 6;
-const int LowL = 7;
+const int HighL = 3;
+const int LowL = 4;
 
 // Right motor pins
-const int EnR = 3;
-const int HighR = 2;
-const int LowR = 4;
+const int EnR = 6;
+const int HighR = 8;
+const int LowR = 7;
 
 void setup() {
   Serial.begin(57600); // Seri haberleşmeyi başlat
@@ -37,7 +37,7 @@ void setup() {
   pinMode(ECHO_PIN, INPUT);
 
   // Servo motoru pin 9'a bağla
-  Servo1.attach(9);
+  Servo1.attach(10);
   Servo1.write(servoCenter); // Servo başlangıçta merkez konumda başlat
 
   // Motor pinlerini çıkış olarak ayarla

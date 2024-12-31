@@ -35,6 +35,10 @@ bool otonomMod = false;       // Varsayılan manuel mod
 unsigned long lastCommandTime = 0;
 int resultValue = 0;          // Raspberry Pi'den gelen açı değeri
 
+// U dönüş değişkenleri
+bool uTurnActive = false;       // U dönüşü aktif mi?
+unsigned long uTurnStartTime;   // U dönüşü başlangıç zamanı
+
 // IR Tuş Kodları
 #define BUTTON_1 0xBA45FF00 // Manuel Mod
 #define BUTTON_2 0xB946FF00 // Otonom Mod
@@ -44,29 +48,7 @@ int resultValue = 0;          // Raspberry Pi'den gelen açı değeri
 #define BUTTON_LEFT 0xF708FF00
 #define BUTTON_OK 0xE31CFF00
 
-// Fonksiyon Tanımları
-void setup() {
-  Serial.begin(57600); // Seri Haberleşme Hızı
-
-  // IR Alıcıyı Başlat
-  IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
-
-  // Mesafe Sensörü Pinleri
-  pinMode(TRIGGER_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
-
-  // Servo Motor
-  Servo1.attach(10);
-  Servo1.write(servoCenter); // Başlangıçta ortada
-
-  // Motor Pinleri
-  pinMode(EnL, OUTPUT);
-  pinMode(HighL, OUTPUT);
-  pinMode(LowL, OUTPUT);
-  pinMode(EnR, OUTPUT);
-  pinMode(HighR, OUTPUT);
-  pinMode(LowR, OUTPUT);
-}
+// **Fonksiyonlar**
 
 // İleri Hareket
 void Forward(int speed = 95) {
@@ -97,21 +79,38 @@ void MotorStop() {
 }
 
 // Sola Dön
-void TurnLeft() {
-  Servo1.write(servoMax);
+void TurnLeft(int durationMs) {
+  Servo1.write(servoMax); // Sola dön
+  Forward();              
+  delay(durationMs);
+  Servo1.write(servoCenter); 
+  MotorStop();
 }
 
-// Sağa Dön
-void TurnRight() {
-  Servo1.write(servoMin);
+// Sağa Dönüş
+void TurnRightBack(int durationMs) {
+  Servo1.write(servoMin); // Sağa dön
+  Backward();             
+  delay(durationMs);      
+  Servo1.write(servoCenter); 
+  MotorStop();            
 }
 
-// Orta Pozisyona Dön
-void CenterServo() {
-  Servo1.write(servoCenter);
+// U Dönüşü
+void PerformUTurn() {
+  Forward();
+  delay(750); 
+
+  // Sola dönerek U dönüşü yap
+  TurnLeft(1200); 
+  TurnRightBack(1200);
+  TurnLeft(1500); 
+
+  MotorStop();
+  delay(2000);
 }
 
-// IR Komutlarını İşle
+// **IR Komutlarını İşle**
 void handleIRCommand(unsigned long command) {
   if (command == BUTTON_1) { // Manuel Mod
     otonomMod = false;
@@ -119,69 +118,100 @@ void handleIRCommand(unsigned long command) {
   }
   else if (command == BUTTON_2) { // Otonom Mod
     otonomMod = true; // Otonom moda geç
-    Servo1.write(servoCenter); // Servo ortada başlasın
-    MotorStop(); // Otonom mod başlangıcında dur
+    Servo1.write(servoCenter); 
+    MotorStop(); 
   }
   else if (!otonomMod) { // Manuel Mod Kontrolleri
     if (command == BUTTON_UP) { // İleri Git
       Forward();
-      lastCommandTime = millis(); // Zamanlayıcı güncelle
+      lastCommandTime = millis(); 
     }
     else if (command == BUTTON_DOWN) { // Geri Git
       Backward();
-      lastCommandTime = millis(); // Zamanlayıcı güncelle
+      lastCommandTime = millis(); 
     }
     else if (command == BUTTON_RIGHT) { // Sağa Dön
-      TurnRight();
+      Servo1.write(servoMin);
     }
     else if (command == BUTTON_LEFT) { // Sola Dön
-      TurnLeft();
+      Servo1.write(servoMax);
     }
     else if (command == BUTTON_OK) { // Ortaya Dön
-      CenterServo();
+      Servo1.write(servoCenter);
     }
   }
 }
 
-// Ana Döngü
+// **Kurulum**
+void setup() {
+  Serial.begin(9600); // Seri haberleşme
+  IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
+
+  pinMode(TRIGGER_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  Servo1.attach(10);
+  Servo1.write(servoCenter); 
+
+  pinMode(EnL, OUTPUT);
+  pinMode(HighL, OUTPUT);
+  pinMode(LowL, OUTPUT);
+  pinMode(EnR, OUTPUT);
+  pinMode(HighR, OUTPUT);
+  pinMode(LowR, OUTPUT);
+}
+
+// **Ana Döngü**
 void loop() {
-  
   // IR Kodlarını Kontrol Et
   if (IrReceiver.decode()) {
     unsigned long irCode = IrReceiver.decodedIRData.decodedRawData;
-    if (irCode > 1) { // Geçerli bir IR kodu
-      handleIRCommand(irCode); // Komutu işle
+    if (irCode > 1) { 
+      handleIRCommand(irCode); 
     }
-    IrReceiver.resume(); // Yeni veri almak için hazırla
+    IrReceiver.resume(); 
   }
 
-  // Manuel Mod: Süreyi Kontrol Et ve Motorları Durdur
+  // Manuel Mod Kontrolü
   if (!otonomMod && millis() - lastCommandTime > 500) {
-    MotorStop(); // 500 ms sonra dur
+    MotorStop();
   }
 
-  // Otonom Mod: Seri Porttan Gelen Veriyi Sürekli Kontrol Et
+  // Otonom Mod Kontrolü
   if (otonomMod) {
-    distance = sonar.ping_cm(); // Mesafe Sensörü Kontrolü
-    if (distance > 10) {
-      Forward(); // İleri hareket
+    distance = sonar.ping_cm(); 
 
-      // Seri Porttan Veri Al
-      if (Serial.available() > 0) {
-        String data = Serial.readStringUntil('\n');
-        resultValue = data.toInt();
+    if (distance > 10) {
+      Forward(); 
+
+      // U dönüş kontrolü
+      if (uTurnActive) {
+        PerformUTurn();
+        if (millis() - uTurnStartTime > 5500) { 
+          uTurnActive = false;
+        }
+        return; 
       }
 
-      // Gelen açı değeri ile servo ayarla
-      float error = resultValue;
-      int servoAngle = servoCenter - error;
+      // Raspberry Pi'den Gelen Veriyi Kontrol Et
+      if (Serial.available() > 0) {
+        String data = Serial.readStringUntil('\n');
 
-      // Servo sınırlarını kontrol et
-      if (servoAngle > servoMax) servoAngle = servoMax;
-      if (servoAngle < servoMin) servoAngle = servoMin;
+        if (data == "TURN") { // U dönüş komutu
+          uTurnActive = true;
+          uTurnStartTime = millis();
+        } else {
+          resultValue = data.toInt(); 
+        }
+      }
 
+      // Servo Açısını Ayarla
+      int servoAngle = servoCenter - resultValue;
+      servoAngle = constrain(servoAngle, servoMin, servoMax);
       Servo1.write(servoAngle);
     } 
-    
+    else {
+      MotorStop();
+    }
   }
 }
