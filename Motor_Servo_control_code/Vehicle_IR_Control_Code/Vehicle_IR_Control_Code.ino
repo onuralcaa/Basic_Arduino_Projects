@@ -51,7 +51,7 @@ unsigned long uTurnStartTime;   // U dönüşü başlangıç zamanı
 // **Fonksiyonlar**
 
 // İleri Hareket
-void Forward(int speed = 95) {
+void Forward(int speed = 100) {
   digitalWrite(HighR, HIGH);
   digitalWrite(LowR, LOW);
   analogWrite(EnR, speed);
@@ -62,7 +62,7 @@ void Forward(int speed = 95) {
 }
 
 // Geri Hareket
-void Backward(int speed = 95) {
+void Backward(int speed = 100) {
   digitalWrite(HighR, LOW);
   digitalWrite(LowR, HIGH);
   analogWrite(EnR, speed);
@@ -187,7 +187,7 @@ void loop() {
       // U dönüş kontrolü
       if (uTurnActive) {
         PerformUTurn();
-        if (millis() - uTurnStartTime > 5500) { 
+        if (millis() - uTurnStartTime > 4500) { 
           uTurnActive = false;
         }
         return; 
