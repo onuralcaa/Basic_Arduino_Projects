@@ -34,6 +34,7 @@ const int LowR = 7;
 bool otonomMod = false;       // Varsayılan manuel mod
 unsigned long lastCommandTime = 0;
 int resultValue = 0;          // Raspberry Pi'den gelen açı değeri
+int motorSpeed = 150;         // **Motor hızı başlangıçta manuel mod için 150 olarak ayarlandı**
 
 // U dönüş değişkenleri
 bool uTurnActive = false;       // U dönüşü aktif mi?
@@ -50,58 +51,57 @@ unsigned long uTurnStartTime;   // U dönüşü başlangıç zamanı
 
 // **Fonksiyonlar**
 
-// İleri Hareket
-void Forward(int speed = 100) {
+// 🚗 **İleri Hareket**
+void Forward() {
   digitalWrite(HighR, HIGH);
   digitalWrite(LowR, LOW);
-  analogWrite(EnR, speed);
+  analogWrite(EnR, motorSpeed);  // **Güncellenen motor hızını kullan**
 
   digitalWrite(HighL, LOW);
   digitalWrite(LowL, HIGH);
-  analogWrite(EnL, speed);
+  analogWrite(EnL, motorSpeed);  // **Güncellenen motor hızını kullan**
 }
 
-// Geri Hareket
-void Backward(int speed = 100) {
+// 🔄 **Geri Hareket**
+void Backward() {
   digitalWrite(HighR, LOW);
   digitalWrite(LowR, HIGH);
-  analogWrite(EnR, speed);
+  analogWrite(EnR, motorSpeed);  
 
   digitalWrite(HighL, HIGH);
   digitalWrite(LowL, LOW);
-  analogWrite(EnL, speed);
+  analogWrite(EnL, motorSpeed);
 }
 
-// Araç Durdur
+// 🛑 **Araç Durdur**
 void MotorStop() {
   analogWrite(EnR, 0);
   analogWrite(EnL, 0);
 }
 
-// Sola Dön
+// 🔄 **Sola Dön**
 void TurnLeft(int durationMs) {
-  Servo1.write(servoMax); // Sola dön
+  Servo1.write(servoMax); 
   Forward();              
   delay(durationMs);
   Servo1.write(servoCenter); 
   MotorStop();
 }
 
-// Sağa Dönüş
+// 🔁 **Sağa Dönüş**
 void TurnRightBack(int durationMs) {
-  Servo1.write(servoMin); // Sağa dön
+  Servo1.write(servoMin); 
   Backward();             
   delay(durationMs);      
   Servo1.write(servoCenter); 
   MotorStop();            
 }
 
-// U Dönüşü
+// ⭕ **U Dönüşü**
 void PerformUTurn() {
   Forward();
   delay(750); 
 
-  // Sola dönerek U dönüşü yap
   TurnLeft(1200); 
   TurnRightBack(1200);
   TurnLeft(1500); 
@@ -112,31 +112,33 @@ void PerformUTurn() {
 
 // **IR Komutlarını İşle**
 void handleIRCommand(unsigned long command) {
-  if (command == BUTTON_1) { // Manuel Mod
+  if (command == BUTTON_1) { // **Manuel Mod**
     otonomMod = false;
-    MotorStop(); // Manuel moda geçerken motorları durdur
+    motorSpeed = 150; // **Manuel modda hız 150**
+    MotorStop();
   }
-  else if (command == BUTTON_2) { // Otonom Mod
-    otonomMod = true; // Otonom moda geç
+  else if (command == BUTTON_2) { // **Otonom Mod**
+    otonomMod = true;
+    motorSpeed = 120; // **Otonom modda hız 120**
     Servo1.write(servoCenter); 
-    MotorStop(); 
+    MotorStop();
   }
-  else if (!otonomMod) { // Manuel Mod Kontrolleri
-    if (command == BUTTON_UP) { // İleri Git
+  else if (!otonomMod) { // **Manuel Mod Kontrolleri**
+    if (command == BUTTON_UP) { 
       Forward();
       lastCommandTime = millis(); 
     }
-    else if (command == BUTTON_DOWN) { // Geri Git
+    else if (command == BUTTON_DOWN) { 
       Backward();
       lastCommandTime = millis(); 
     }
-    else if (command == BUTTON_RIGHT) { // Sağa Dön
+    else if (command == BUTTON_RIGHT) { 
       Servo1.write(servoMin);
     }
-    else if (command == BUTTON_LEFT) { // Sola Dön
+    else if (command == BUTTON_LEFT) { 
       Servo1.write(servoMax);
     }
-    else if (command == BUTTON_OK) { // Ortaya Dön
+    else if (command == BUTTON_OK) { 
       Servo1.write(servoCenter);
     }
   }
@@ -144,7 +146,7 @@ void handleIRCommand(unsigned long command) {
 
 // **Kurulum**
 void setup() {
-  Serial.begin(9600); // Seri haberleşme
+  Serial.begin(9600); 
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
 
   pinMode(TRIGGER_PIN, OUTPUT);
@@ -163,7 +165,7 @@ void setup() {
 
 // **Ana Döngü**
 void loop() {
-  // IR Kodlarını Kontrol Et
+  // 📡 **IR Kodlarını Kontrol Et**
   if (IrReceiver.decode()) {
     unsigned long irCode = IrReceiver.decodedIRData.decodedRawData;
     if (irCode > 1) { 
@@ -172,19 +174,19 @@ void loop() {
     IrReceiver.resume(); 
   }
 
-  // Manuel Mod Kontrolü
+  // **Manuel Mod Kontrolü**
   if (!otonomMod && millis() - lastCommandTime > 500) {
     MotorStop();
   }
 
-  // Otonom Mod Kontrolü
+  // **Otonom Mod Kontrolü**
   if (otonomMod) {
     distance = sonar.ping_cm(); 
 
     if (distance > 10) {
       Forward(); 
 
-      // U dönüş kontrolü
+      // ⭕ **U dönüş kontrolü**
       if (uTurnActive) {
         PerformUTurn();
         if (millis() - uTurnStartTime > 4500) { 
@@ -193,11 +195,11 @@ void loop() {
         return; 
       }
 
-      // Raspberry Pi'den Gelen Veriyi Kontrol Et
+      // 🔄 **Raspberry Pi'den Gelen Veriyi Kontrol Et**
       if (Serial.available() > 0) {
         String data = Serial.readStringUntil('\n');
 
-        if (data == "TURN") { // U dönüş komutu
+        if (data == "TURN") { 
           uTurnActive = true;
           uTurnStartTime = millis();
         } else {
@@ -205,7 +207,7 @@ void loop() {
         }
       }
 
-      // Servo Açısını Ayarla
+      // **Servo Açısını Ayarla**
       int servoAngle = servoCenter - resultValue;
       servoAngle = constrain(servoAngle, servoMin, servoMax);
       Servo1.write(servoAngle);
